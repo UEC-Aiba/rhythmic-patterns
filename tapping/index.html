@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>リズムに合わせて叩く：タッピング実験</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF3F6; --surface:#FFFFFF; --ink:#1B2A33; --muted:#53666F; --line:#CBD6DC;
+  --navy:#1A5276; --teal:#0E6E8A; --orange:#B8621A; --purple:#7D3C98; --good:#1E7B4F;
+  --pad:#0E6E8A; --pad-ink:#FFFFFF; --pad-active:#1A5276; --target:#8A9AA3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A21; --surface:#16262F; --ink:#E6EEF2; --muted:#9DB0BA; --line:#2C414C;
+    --navy:#7FB6D6; --teal:#5CC0DD; --orange:#F0A15F; --purple:#C79AE0; --good:#6CCB9B;
+    --pad:#1C7E9C; --pad-ink:#FFFFFF; --pad-active:#2A9CBF; --target:#7C8F99;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A21; --surface:#16262F; --ink:#E6EEF2; --muted:#9DB0BA; --line:#2C414C;
+  --navy:#7FB6D6; --teal:#5CC0DD; --orange:#F0A15F; --purple:#C79AE0; --good:#6CCB9B;
+  --pad:#1C7E9C; --pad-ink:#FFFFFF; --pad-active:#2A9CBF; --target:#7C8F99;
+}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+  font-size:17px;line-height:1.65;-webkit-text-size-adjust:100%}
+main{max-width:560px;margin:0 auto;padding:20px 18px 40px}
+h1{font-size:26px;line-height:1.35;margin:8px 0 10px;color:var(--navy);letter-spacing:.01em}
+h2{font-size:20px;line-height:1.4;margin:0 0 8px;color:var(--navy)}
+p{margin:0 0 12px}
+.lead{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;margin:14px 0}
+ul.tips{margin:0;padding-left:1.2em}
+ul.tips li{margin:0 0 6px}
+button.cta{appearance:none;border:0;border-radius:12px;background:var(--teal);color:#fff;font:inherit;font-weight:700;
+  padding:14px 22px;min-height:52px;width:100%;cursor:pointer;touch-action:manipulation}
+button.cta:focus-visible,button.sub:focus-visible,#pad:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+button.sub{appearance:none;border:1.5px solid var(--teal);border-radius:12px;background:transparent;color:var(--teal);font:inherit;
+  font-weight:700;padding:12px 18px;min-height:48px;width:100%;cursor:pointer;margin-top:10px;touch-action:manipulation}
+.hidden{display:none !important}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:6px}
+.status{font-size:30px;font-weight:700;min-height:44px;color:var(--navy);text-align:center}
+.status small{display:block;font-size:15px;font-weight:400;color:var(--muted)}
+#pad{appearance:none;border:0;border-radius:50%;width:min(72vw,300px);height:min(72vw,300px);background:var(--pad);color:var(--pad-ink);
+  font:inherit;font-size:26px;font-weight:700;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 0 0 10px color-mix(in srgb,var(--pad) 16%,transparent);transition:transform .06s}
+#pad.listening{background:var(--target);box-shadow:0 0 0 10px color-mix(in srgb,var(--target) 16%,transparent)}
+#pad.hit{transform:scale(.965);background:var(--pad-active)}
+.bar{width:100%;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--teal)}
+.count{color:var(--muted);font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:16px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;color:var(--muted);font-size:14px}
+.tag{font-weight:700}
+.tag.soft{color:var(--orange)} .tag.sharp{color:var(--orange)} .tag.ok{color:var(--good)} .tag.bad{color:var(--muted)}
+.rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:6px}
+.ringbox{text-align:center;font-size:15px}
+.ringbox svg{width:100%;max-width:140px;height:auto}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:15px;color:var(--muted);margin:6px 0 0}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend .t::before{border:2px solid var(--target)} .legend .p::before{background:var(--purple)}
+.warn{border-left:4px solid var(--orange);padding:6px 12px;background:color-mix(in srgb,var(--orange) 10%,transparent);border-radius:0 8px 8px 0;font-size:15px}
+.note{font-size:15px;color:var(--muted)}
+svg text{font-family:inherit}
+#chart{width:100%;height:auto;display:block}
+@media (prefers-reduced-motion: reduce){#pad{transition:none}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="s-intro">
+  <h1>リズムに合わせて叩く</h1>
+  <p class="lead">音の列を聞いて，すべての音に合わせて，できるだけ正確に，指で叩きます．4つのリズムを，約25秒ずつ．合計で，3分ほどです．</p>
+  <div class="card">
+    <ul class="tips">
+      <li>イヤホン（有線）かスピーカーで，音量を上げます．マナーモードは，解除してください．</li>
+      <li>Bluetoothのイヤホンは，音が遅れるので，使わないでください．</li>
+      <li>最初の数秒は，聞くだけです．「叩く」と出たら，丸を叩きます（パソコンでは，スペースキー）．</li>
+      <li>叩き方は，どちらの手でも，指1本でも，かまいません．</li>
+    </ul>
+  </div>
+  <button class="cta" id="b-start">練習を始める</button>
+  <p class="note" style="margin-top:14px">結果は，この画面の中だけに表示されます．どこにも送信されません．</p>
+</section>
+
+<section id="s-run" class="hidden" aria-live="polite">
+  <div class="stage">
+    <div class="count" id="r-title">練習</div>
+    <div class="status" id="r-status">準備</div>
+    <button id="pad" type="button" aria-label="叩く">叩く</button>
+    <div class="bar" aria-hidden="true"><i id="r-bar"></i></div>
+    <div class="count" id="r-count"></div>
+  </div>
+</section>
+
+<section id="s-between" class="hidden">
+  <h2 id="bt-title"></h2>
+  <p id="bt-text" class="lead"></p>
+  <div id="bt-warn" class="warn hidden"></div>
+  <button class="cta" id="b-next" style="margin-top:14px">つぎへ</button>
+</section>
+
+<section id="s-result" class="hidden">
+  <h2>あなたの叩き方</h2>
+  <p class="lead" id="res-lead"></p>
+  <div class="card">
+    <svg id="chart" viewBox="0 0 320 300" role="img" aria-label="合図の比と，叩いた比の関係を示すグラフ"></svg>
+    <div class="legend"><span class="t">合図どおり（対角線）</span><span class="p">あなたの叩き</span></div>
+    <p class="note" style="margin:8px 0 0">縦軸と横軸は，2つの間隔のうち，短いほうの割合（％）です．点線の横線は，2：1（33％）です．</p>
+  </div>
+  <div class="card">
+    <table id="res-table"><thead><tr><th>合図</th><th>あなた</th><th>ようす</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="card">
+    <h2 style="font-size:17px">1周期の中の，2つ目の音の位置</h2>
+    <div class="rings" id="rings"></div>
+    <p class="note" style="margin:8px 0 0">灰色の丸は，合図の2つ目の音，紫の点は，あなたの2つ目の叩きです（1つ目の音を，真上とします）．</p>
+  </div>
+  <div id="res-warn" class="warn hidden"></div>
+  <button class="sub" id="b-fast">はやいテンポ（4：3 を含む）にも，挑戦する</button>
+  <button class="sub" id="b-again">もう一度，最初から</button>
+</section>
+
+</main>
+
+<script>
+/*CORE-START*/
+const SETS = {
+  slow: {name:"ゆっくり", T:1.0, listen:4, tap:20, items:[
+    {key:"1:1", label:"1：1", S:0.5},
+    {key:"3:2", label:"3：2", S:0.4},
+    {key:"2:1", label:"2：1", S:1/3},
+    {key:"3:1", label:"3：1", S:0.25}
+  ]},
+  fast: {name:"はやい", T:0.5, listen:6, tap:36, items:[
+    {key:"1:1", label:"1：1", S:0.5},
+    {key:"4:3", label:"4：3", S:0.42},
+    {key:"2:1", label:"2：1", S:1/3}
+  ]}
+};
+
+function median(a){ if(!a.length) return NaN; const b=[...a].sort((x,y)=>x-y); const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function wrap01(x){ return x-Math.floor(x); }                 // to [0,1)
+function wrapHalf(x){ const w=wrap01(x+0.5)-0.5; return w; }  // to [-0.5,0.5)
+
+// Latency of the device: the typical (tap minus sound) offset, estimated from an isochronous practice run.
+// taps and t0 are in seconds on the same clock; the sounds are at t0 + k*0.5.
+function estimateLatency(taps, t0, T, listen){
+  const grid=T/2, d=[];
+  for(const t of taps){
+    if(t < t0 + listen*T) continue;
+    const r = wrapHalf((t - t0)/grid)*grid;               // signed distance to the nearest sound (s)
+    d.push(r);
+  }
+  if(d.length<5) return {ok:false, delta:0, n:d.length};
+  return {ok:true, delta:median(d), n:d.length};
+}
+
+// Estimate the rhythm that the person tapped: the length of the first (short) interval as a percent of the cycle.
+function analyze(taps, t0, T, S, listen, total, delta0, searchHalf){
+  const s=S;                                              // short interval as a fraction of the cycle
+  const from = t0 + (listen+2)*T - 0.3*T, to = t0 + total*T + 0.5*T;
+  const xs = taps.filter(t=>t>=from && t<=to).map(t=>(t - t0)/T);   // in cycles
+  if(xs.length<12) return {ok:false, reason:"叩きが，少なすぎます", n:xs.length};
+  const dist=(p,c)=>Math.abs(wrapHalf(p-c));
+  let best=null;
+  const lo=delta0/T - searchHalf/T, hi=delta0/T + searchHalf/T, step=0.002/T;
+  for(let d=lo; d<=hi+1e-9; d+=step){
+    let cost=0;
+    for(const x of xs){ const p=wrap01(x-d); const e=Math.min(dist(p,0),dist(p,s)); cost+=Math.min(e,0.2)**2; }
+    if(!best||cost<best.cost) best={d,cost};
+  }
+  const A=[],B=[];
+  for(const x of xs){
+    const p=wrap01(x-best.d), da=wrapHalf(p-0), db=wrapHalf(p-s);
+    if(Math.min(Math.abs(da),Math.abs(db))>0.2) continue;   // stray tap
+    if(Math.abs(da)<=Math.abs(db)) A.push(da); else B.push(db);
+  }
+  if(A.length<6||B.length<6) return {ok:false, reason:"2つの音の両方に，叩けていません", n:A.length+B.length};
+  const a=median(A), b=median(B);
+  const sd=(v)=>{const m=v.reduce((x,y)=>x+y,0)/v.length; return Math.sqrt(v.reduce((x,y)=>x+(y-m)**2,0)/v.length)};
+  const sdMs=Math.sqrt((sd(A)**2+sd(B)**2)/2)*T*1000;
+  return {ok:true, producedPct:100*(s+b-a), producedFrac:s+b-a, deltaMs:best.d*T*1000, sdMs, nA:A.length, nB:B.length};
+}
+
+// How the produced rhythm differs from the target, in words (the prototype 2:1 is 33.3 %).
+function describe(targetPct, producedPct){
+  const diff=producedPct-targetPct;
+  const toward = (Math.abs(producedPct-100/3) < Math.abs(targetPct-100/3));
+  if(Math.abs(diff)<2) return {cls:"ok", text:"ほぼ，合図どおり"};
+  if(Math.abs(targetPct-100/3)<1.5) return {cls:"bad", text: diff>0?"2つ目が，少し遅い":"2つ目が，少し早い"};
+  if(targetPct<100/3 && diff>0) return {cls:"soft", text:"やわらかく（2：1に近づいた）"};
+  if(targetPct>100/3 && targetPct<45 && diff<0) return {cls:"sharp", text:"鋭く（2：1に近づいた）"};
+  if(toward) return {cls:"soft", text:"2：1のほうへ，近づいた"};
+  return {cls:"bad", text: diff>0?"2つ目が，合図より遅い":"2つ目が，合図より早い"};
+}
+/*CORE-END*/
+
+/* ---------- UI and audio ---------- */
+const $=id=>document.getElementById(id);
+let ctx=null, noise=null;
+const state={ delta0:0, latencyOk:false, order:[], results:{}, set:"slow", idx:0 };
+
+function ensureAudio(){
+  if(!ctx){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    ctx=new AC({latencyHint:"interactive"});
+    const n=Math.floor(ctx.sampleRate*0.12), buf=ctx.createBuffer(1,n,ctx.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+    noise=buf;
+  }
+  if(ctx.state!=="running") return ctx.resume();
+  return Promise.resolve();
+}
+function hat(time){
+  const src=ctx.createBufferSource(); src.buffer=noise;
+  const hp=ctx.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=6500;
+  const g=ctx.createGain();
+  g.gain.setValueAtTime(0.0001,time);
+  g.gain.exponentialRampToValueAtTime(0.9,time+0.001);
+  g.gain.exponentialRampToValueAtTime(0.0001,time+0.07);
+  src.connect(hp); hp.connect(g); g.connect(ctx.destination);
+  src.start(time); src.stop(time+0.12);
+}
+function perfMinusCtx(){
+  const ts=ctx.getOutputTimestamp?ctx.getOutputTimestamp():null;
+  if(ts && ts.contextTime>0 && ts.performanceTime>0) return ts.performanceTime/1000-ts.contextTime;
+  return performance.now()/1000-ctx.currentTime;
+}
+
+function show(id){ for(const s of ["s-intro","s-run","s-between","s-result"]) $(s).classList.toggle("hidden",s!==id); window.scrollTo(0,0); }
+
+// Run one trial. cfg: {T,listen,tap}; S: short interval fraction. Resolves with {taps, t0Perf}.
+function runTrial(cfg,S,labels){
+  return new Promise(async resolve=>{
+    await ensureAudio();
+    const pad=$("pad"), status=$("r-status"), bar=$("r-bar"), count=$("r-count");
+    let lastHTML=""; const setStatus=(h)=>{ if(h!==lastHTML){ status.innerHTML=h; lastHTML=h; } };
+    $("r-title").textContent=labels.title;
+    const total=cfg.listen+cfg.tap, T=cfg.T;
+    // countdown (silent)
+    show("s-run"); pad.classList.add("listening"); bar.style.width="0";
+    for(let c=3;c>=1;c--){ status.innerHTML=c+'<small>まもなく始まります</small>'; await new Promise(r=>setTimeout(r,800)); }
+    const start=ctx.currentTime+0.4;
+    const taps=[], offs=[];
+    let nextIdx=0; const ons=[];
+    for(let k=0;k<total;k++){ ons.push(start+k*T); ons.push(start+k*T+S*T); }
+    const timer=setInterval(()=>{
+      offs.push(perfMinusCtx());
+      while(nextIdx<ons.length && ons[nextIdx]<ctx.currentTime+0.25){ hat(ons[nextIdx]); nextIdx++; }
+    },25);
+    const onTap=(tms)=>{ taps.push(tms/1000); pad.classList.add("hit"); setTimeout(()=>pad.classList.remove("hit"),70); };
+    const pd=e=>{ e.preventDefault(); onTap(e.timeStamp); };
+    const kd=e=>{ if(e.repeat) return; if(e.code==="Space"||e.code==="Enter"){ e.preventDefault(); onTap(e.timeStamp); } };
+    pad.addEventListener("pointerdown",pd); window.addEventListener("keydown",kd);
+    let raf;
+    const tick=()=>{
+      const t=ctx.currentTime-start, cyc=Math.floor(t/T);
+      if(t<0){ setStatus('聞く<small>音を聞いてください</small>'); }
+      else if(cyc<cfg.listen){ setStatus('聞く<small>まだ叩かない</small>'); pad.classList.add("listening"); }
+      else { setStatus('叩く<small>すべての音に合わせて</small>'); pad.classList.remove("listening"); }
+      bar.style.width=Math.max(0,Math.min(100,100*t/(total*T)))+"%";
+      count.textContent=(labels.count||"");
+      if(t>total*T+0.35){
+        cancelAnimationFrame(raf); clearInterval(timer);
+        pad.removeEventListener("pointerdown",pd); window.removeEventListener("keydown",kd);
+        pad.classList.add("listening");
+        const off=median(offs);
+        resolve({taps, t0:start+off});
+        return;
+      }
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+  });
+}
+
+async function practice(){
+  const cfg={T:1.0,listen:2,tap:8};
+  const r=await runTrial(cfg,0.5,{title:"練習（一定の間隔）"});
+  const est=estimateLatency(r.taps,r.t0,cfg.T,cfg.listen);
+  state.latencyOk=est.ok; state.delta0=est.ok?est.delta:0;
+  $("bt-title").textContent="練習は，終わりです";
+  const ms=Math.round(state.delta0*1000);
+  let txt="つぎは，本番です．4つのリズムを，ひとつずつ，聞いてから，叩きます．リズムが変わっても，同じように，すべての音に合わせて叩いてください．";
+  $("bt-text").textContent=txt;
+  const w=$("bt-warn");
+  if(!est.ok){ w.textContent="叩きが少なかったようです．もう一度，練習しますか？（「つぎへ」を押すと，本番に進みます．練習をやり直すには，ページを再読み込みしてください）"; w.classList.remove("hidden"); }
+  else if(Math.abs(ms)>150){ w.textContent="音と叩きのずれが，大きいようです（約"+ms+" ms）．Bluetoothのイヤホンを使っていませんか？ このまま進むこともできます．"; w.classList.remove("hidden"); }
+  else { w.classList.add("hidden"); }
+  state.next=()=>startSet("slow");
+  show("s-between");
+}
+
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+async function startSet(name){
+  state.set=name; const cfg=SETS[name];
+  state.order=shuffle(cfg.items); state.results[name]={}; state.idx=0;
+  await nextTrial();
+}
+async function nextTrial(){
+  const name=state.set, cfg=SETS[name];
+  if(state.idx>=state.order.length){ showResults(name); return; }
+  const item=state.order[state.idx];
+  const r=await runTrial(cfg,item.S,{title:cfg.name+"テンポ "+(state.idx+1)+" / "+state.order.length});
+  const a=analyze(r.taps,r.t0,cfg.T,item.S,cfg.listen,cfg.listen+cfg.tap,state.delta0,state.latencyOk?0.06:0.15);
+  state.results[name][item.key]={item,a,nTaps:r.taps.length};
+  state.idx++;
+  if(state.idx>=state.order.length){ showResults(name); return; }
+  $("bt-title").textContent=(state.idx)+" / "+state.order.length+" が，終わりました";
+  $("bt-text").textContent="ひと息ついたら，つぎへ．つぎのリズムは，今までと，違うかもしれません．";
+  $("bt-warn").classList.add("hidden");
+  state.next=nextTrial; show("s-between");
+}
+
+/* ---------- results ---------- */
+function ringSVG(item,a){
+  const R=46, cx=60, cy=60;
+  const pt=(f,r)=>[cx+r*Math.sin(2*Math.PI*f), cy-r*Math.cos(2*Math.PI*f)];
+  let s='<svg viewBox="0 0 120 120" role="img" aria-label="'+item.label+'のリング">';
+  s+='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--line)" stroke-width="2"/>';
+  const [x0,y0]=pt(0,R); s+='<circle cx="'+x0+'" cy="'+y0+'" r="5" fill="var(--ink)"/>';
+  const [xt,yt]=pt(item.S,R); s+='<circle cx="'+xt+'" cy="'+yt+'" r="6" fill="none" stroke="var(--target)" stroke-width="2.4"/>';
+  if(a&&a.ok){ const [xp,yp]=pt(a.producedFrac,R); s+='<circle cx="'+xp+'" cy="'+yp+'" r="4.6" fill="var(--purple)"/>'; }
+  s+='</svg>'; return s;
+}
+function chartSVG(rows){
+  const W=320,H=300,L=44,Rr=14,Tp=14,Bt=40, x0=20,x1=56, y0=20,y1=56;
+  const X=v=>L+(v-x0)/(x1-x0)*(W-L-Rr), Y=v=>H-Bt-(v-y0)/(y1-y0)*(H-Bt-Tp);
+  let s='';
+  for(const v of [20,30,40,50]){
+    s+='<line x1="'+X(v)+'" y1="'+Y(y0)+'" x2="'+X(v)+'" y2="'+Y(y1)+'" stroke="var(--line)" stroke-width="1"/>';
+    s+='<line x1="'+X(x0)+'" y1="'+Y(v)+'" x2="'+X(x1)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-width="1"/>';
+    s+='<text x="'+X(v)+'" y="'+(H-Bt+18)+'" font-size="13" text-anchor="middle" fill="var(--muted)">'+v+'</text>';
+    s+='<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" font-size="13" text-anchor="end" fill="var(--muted)">'+v+'</text>';
+  }
+  s+='<line x1="'+X(x0)+'" y1="'+Y(y0)+'" x2="'+X(x1)+'" y2="'+Y(y1)+'" stroke="var(--target)" stroke-width="2" stroke-dasharray="6 5"/>';
+  s+='<line x1="'+X(x0)+'" y1="'+Y(100/3)+'" x2="'+X(x1)+'" y2="'+Y(100/3)+'" stroke="var(--orange)" stroke-width="1.6" stroke-dasharray="2 4"/>';
+  s+='<text x="'+(X(x1)-2)+'" y="'+(Y(100/3)-5)+'" font-size="12.5" text-anchor="end" fill="var(--orange)">2：1</text>';
+  s+='<text x="'+((L+W-Rr)/2)+'" y="'+(H-6)+'" font-size="13.5" text-anchor="middle" fill="var(--ink)">合図（短い間隔の割合，％）</text>';
+  s+='<text transform="translate(12 '+((Tp+H-Bt)/2)+') rotate(-90)" font-size="13.5" text-anchor="middle" fill="var(--ink)">あなたの叩き（％）</text>';
+  const ok=rows.filter(r=>r.a&&r.a.ok).sort((p,q)=>p.item.S-q.item.S);
+  if(ok.length>1){ s+='<polyline fill="none" stroke="var(--purple)" stroke-width="2.2" points="'+ok.map(r=>X(r.item.S*100)+","+Y(r.a.producedPct)).join(" ")+'"/>'; }
+  for(const r of rows){
+    const tx=X(r.item.S*100);
+    s+='<circle cx="'+tx+'" cy="'+Y(r.item.S*100)+'" r="6" fill="var(--surface)" stroke="var(--target)" stroke-width="2.2"/>';
+    if(r.a&&r.a.ok){
+      const py=Math.max(y0,Math.min(y1,r.a.producedPct));
+      s+='<circle cx="'+tx+'" cy="'+Y(py)+'" r="5.2" fill="var(--purple)"/>';
+      s+='<text x="'+tx+'" y="'+(Y(r.item.S*100)+22)+'" font-size="12.5" text-anchor="middle" fill="var(--muted)">'+r.item.label+'</text>';
+    }
+  }
+  return s;
+}
+function showResults(name){
+  const cfg=SETS[name], res=state.results[name];
+  const rows=cfg.items.map(it=>res[it.key]||{item:it,a:{ok:false}}).sort((p,q)=>p.item.S-q.item.S);
+  $("res-lead").textContent=cfg.name+"テンポ（1周期 "+Math.round(cfg.T*1000)+" ms）．灰色の丸が，合図の比，紫の点が，あなたが叩いた比です．";
+  $("chart").innerHTML=chartSVG(rows);
+  const tb=$("res-table").querySelector("tbody"); tb.innerHTML="";
+  const wr=[];
+  for(const r of rows){
+    const tr=document.createElement("tr");
+    const td1=document.createElement("td"); td1.textContent=r.item.label+"（"+(r.item.S*100).toFixed(0)+"％）";
+    const td2=document.createElement("td"), td3=document.createElement("td");
+    if(r.a&&r.a.ok){
+      const d=describe(r.item.S*100,r.a.producedPct);
+      const longShort=(100-r.a.producedPct)/r.a.producedPct;
+      td2.textContent=r.a.producedPct.toFixed(1)+"％（"+longShort.toFixed(2)+"：1）";
+      const sp=document.createElement("span"); sp.className="tag "+d.cls; sp.textContent=d.text; td3.appendChild(sp);
+    } else { td2.textContent="—"; td3.textContent=(r.a&&r.a.reason)||"測れませんでした"; wr.push(r.item.label); }
+    tr.append(td1,td2,td3); tb.appendChild(tr);
+  }
+  $("rings").innerHTML=rows.map(r=>'<div class="ringbox">'+ringSVG(r.item,r.a)+'<div>'+r.item.label+'</div></div>').join("");
+  const w=$("res-warn");
+  if(wr.length){ w.textContent="測れなかったリズム："+wr.join("，")+"．もう一度，最初からやってみてください．"; w.classList.remove("hidden"); } else w.classList.add("hidden");
+  $("b-fast").classList.toggle("hidden",name==="fast");
+  show("s-result");
+}
+
+$("b-start").addEventListener("click",()=>{ ensureAudio().then(practice); });
+$("b-next").addEventListener("click",()=>{ ensureAudio().then(()=>state.next&&state.next()); });
+$("b-fast").addEventListener("click",()=>{ ensureAudio().then(()=>startSet("fast")); });
+$("b-again").addEventListener("click",()=>{ state.results={}; show("s-intro"); });
+</script>
+</body>
+</html>

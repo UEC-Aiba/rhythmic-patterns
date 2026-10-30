@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>リズムを聞いて，書いてみよう</title>
+<style>
+:root{--bg:#F7FAFB;--fg:#1B2A33;--muted:#5B6B75;--accent:#1A5276;--accent-fg:#FFFFFF;--line:#D3DDE3;--surface:#FFFFFF;--axis:#5B6B75;--grid:#D3DDE3;--sel:#E4F0F5;--ok:#1E7A3E;--ng:#B3501B;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181D;--fg:#E8EEF1;--muted:#A3B2BB;--accent:#7FB8D4;--accent-fg:#10181D;--line:#2C3B44;--surface:#17232A;--axis:#9AABB5;--grid:#2C3B44;--sel:#1D3440;--ok:#6CCB8A;--ng:#F0A070;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10181D;--fg:#E8EEF1;--muted:#A3B2BB;--accent:#7FB8D4;--accent-fg:#10181D;--line:#2C3B44;--surface:#17232A;--axis:#9AABB5;--grid:#2C3B44;--sel:#1D3440;--ok:#6CCB8A;--ng:#F0A070;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo","Noto Sans JP",sans-serif;font-size:17px;line-height:1.75;-webkit-text-size-adjust:100%}
+.wrap{max-width:600px;margin:0 auto;padding:22px 16px 64px}
+h1{font-size:27px;line-height:1.35;margin:4px 0 14px;color:var(--accent);font-weight:700}
+h2{font-size:21px;line-height:1.4;margin:26px 0 8px;font-weight:700}
+p{margin:0 0 14px}
+.muted{color:var(--muted);font-size:15.5px}
+.btn{display:block;width:100%;font:inherit;font-size:18px;font-weight:700;padding:14px 18px;border-radius:12px;border:2px solid var(--accent);background:var(--accent);color:var(--accent-fg);cursor:pointer;text-align:center;margin:10px 0}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;margin:0 0 16px;padding:12px 14px;border-left:5px solid var(--accent);background:var(--surface)}
+.rule b{white-space:nowrap}
+.top{display:flex;justify-content:space-between;align-items:baseline;font-weight:700}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 0 16px}
+.bar>div{height:100%;width:0;background:var(--accent)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.opt{font:inherit;color:var(--fg);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:8px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer}
+.opt svg{width:100%;height:auto;max-width:132px}
+.opt .lab{font-size:16.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--sel);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.opt:disabled{opacity:.42;cursor:default}
+.opt.none{grid-column:1/-1;flex-direction:row;justify-content:center;padding:12px;font-size:16.5px;font-weight:700}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none}
+.chip{display:inline-flex;align-items:center;gap:5px;margin:0 10px 6px 0;white-space:nowrap;font-size:15.5px}
+.map{width:100%;height:auto;display:block;margin:6px 0}
+.map .tick{font-size:22px;fill:var(--muted)}
+.map .corner{font-size:25px;font-weight:700;fill:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14.5px;line-height:1.5}
+.scroll{overflow-x:auto}
+td .chip{margin:0;font-size:14.5px}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-weight:700;color:var(--muted)}
+td.ok{color:var(--ok);font-weight:700}td.ng{color:var(--ng);font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row .btn{flex:1 1 200px}
+label.chk{display:flex;gap:8px;align-items:center;margin:8px 0;font-size:16px}
+.small{font-size:14.5px;color:var(--muted);line-height:1.6}
+.lvl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0 10px;font-size:15.5px}
+.lvl button{font:inherit;font-size:15.5px;padding:6px 11px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.lvl button[aria-pressed="true"]{border-color:var(--accent);background:var(--sel);font-weight:700}
+.ex{width:100%;height:auto;display:block}
+.ex .exl{font-size:15px;fill:var(--muted)}
+.ex .exn{font-size:15px;font-weight:700;fill:var(--fg)}
+.ex .lowt line{stroke:var(--muted);stroke-width:5;stroke-linecap:round}
+.ex .hight line{stroke:var(--fg);stroke-width:4;stroke-linecap:round}
+.exrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 6px}
+.exrow .ex{flex:1 1 250px;max-width:360px;margin:0}
+#ex-opt{flex:0 0 150px}
+.opt.demo{cursor:default;opacity:1}
+@media (prefers-reduced-motion:no-preference){.bar>div{transition:width .1s linear}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="screen" id="s-intro">
+  <h1>リズムを聞いて，書いてみよう</h1>
+  <p>短いリズムが，3回くり返されます．どのリズムに聞こえたかを，12種類から1つ選んでください．<b>正解は，ありません．</b>聞こえたとおりに，答えてください．</p>
+  <div class="rule">
+    <b>低い音</b><span>1秒ごとに鳴る，合図です．</span>
+    <b>高い音</b><span>4つの音が鳴ります．1つ目から4つ目までが，ちょうど1秒（3つの間隔）です．1つ目と4つ目は，低い音と同時に鳴ります．これが，リズムです．</span>
+  </div>
+  <div class="exrow">
+  <svg class="ex" viewBox="0 0 330 136" role="img" aria-label="例：1：2：1 のリズム。低い音は1秒ごと、高い音は4つ">
+    <text x="20" y="18" class="exl">低い音（1秒ごと）</text>
+    <g class="lowt"><line x1="20" y1="28" x2="20" y2="58"/><line x1="106" y1="28" x2="106" y2="58"/><line x1="192" y1="28" x2="192" y2="58"/><line x1="278" y1="28" x2="278" y2="58"/></g>
+    <text x="20" y="84" class="exl">高い音（4つ）：例 1：2：1</text>
+    <g class="hight"><line x1="106" y1="92" x2="106" y2="118"/><line x1="127.5" y1="92" x2="127.5" y2="118"/><line x1="170.5" y1="92" x2="170.5" y2="118"/><line x1="192" y1="92" x2="192" y2="118"/></g>
+    <text x="116.7" y="132" class="exn" text-anchor="middle">1</text><text x="149" y="132" class="exn" text-anchor="middle">2</text><text x="181.2" y="132" class="exn" text-anchor="middle">1</text>
+  </svg>
+  <div id="ex-opt" aria-label="答えの選択肢の例：1：2：1"></div>
+  </div>
+  <p class="small" id="ex-cap">例：1：2：1。左の図は，音が鳴るタイミング．右は，答えの選択肢の見え方です（楽譜と比．灰色の音は，4つ目の音）．</p>
+  <p>答えは，楽譜か，数字（比）で選べます．楽譜の灰色の音は，4つ目の音（次の小節の頭）です．答えるのは，その前の，3つの間隔です．例えば「1：2：1」は，3つの間隔の長さが，1：2：1 の比のリズムです．</p>
+  <p class="muted">低い音が聞こえにくいときは，下の「低い音の大きさ」を，大きくしてください．イヤホンがあると，聞きやすくなります．スマートフォンは，マナーモードを解除してください（iPhone は，側面の消音スイッチ）．<span id="i-time">約5分</span>かかります．回答は，この端末の中だけに残ります．</p>
+  <div class="lvl" data-cnt="intro"></div>
+  <div class="lvl" data-lvl="intro"></div>
+  <button class="btn ghost" id="i-check" type="button">音を確かめる（例：1：2：1）</button>
+  <button class="btn" id="i-start" type="button">はじめる（12問）</button>
+</section>
+
+<section class="screen" id="s-trial" hidden>
+  <div class="top"><span id="t-count">1 / 12</span><span class="muted">全体の進み</span></div>
+  <div class="bar" aria-hidden="true"><div id="t-bar"></div></div>
+  <div class="lvl" data-lvl="trial"></div>
+  <button class="btn" id="t-play" type="button">▶ 聞く（約8秒）</button>
+  <div class="bar" aria-hidden="true"><div id="t-prog"></div></div>
+  <p class="muted" id="t-status" role="status">「聞く」を押すと，音が鳴ります．</p>
+  <div class="opts" id="opts" role="group" aria-label="リズムを選ぶ"></div>
+  <div class="opts"><button type="button" class="opt none" id="opt-none" aria-pressed="false" disabled><i class="dot" style="background:#8A97A0"></i>どれにも聞こえない・わからない</button></div>
+  <button class="btn" id="t-next" type="button" disabled>決定して，次へ</button>
+</section>
+
+<section class="screen" id="s-result" hidden>
+  <h1>あなたの回答の地図</h1>
+  <p id="r-sum"></p>
+  <div id="r-map"></div>
+  <p class="small">三角形の1点が，1つのリズムです（3つの間隔の合計は，いつも1秒）．上の角に近いほど，1つ目の間隔が長く，左下の角は2つ目，右下の角は3つ目が長いリズムです．</p>
+  <p class="small">丸＝あなたの回答（色＝選んだリズム，数字＝問の番号）．背景のうすい色＝そのリズムに，いちばん近い簡単な比（単純に丸めた場合）．×＝4つの単純なリズム（1：1：1，1：2：1，2：1：1，1：1：2）の，ちょうどの位置．</p>
+  <label class="chk"><input type="checkbox" id="r-grid">聞いた刺激の位置（66個の候補）を，点で表示する</label>
+  <div id="r-legend"></div>
+  <h2>回答の一覧</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>問</th><th>間隔（ms）</th><th>あなたの回答</th><th>近い簡単な比</th><th></th></tr></thead>
+    <tbody id="r-body"></tbody>
+  </table></div>
+  <p class="small">間隔（ms）は，1つ目・2つ目・3つ目の間隔です．丸の色と，背景の色が違うところは，「いちばん近い簡単な比」では，説明できない回答です．</p>
+  <div class="row">
+    <button class="btn" id="r-more" type="button">さらに12問</button>
+    <button class="btn ghost" id="r-copy" type="button">回答をコピー</button>
+    <button class="btn ghost" id="r-again" type="button">最初からやり直す</button>
+  </div>
+  <p class="small">この課題は，Desain & Honing（2003）の実験1（リズムの同定）にならった，体験用の簡易版です．音は，論文の打楽器音（ウッドブロックとボンゴ）に近づけて作った，合成音です．</p>
+</section>
+
+</div>
+<script>
+// ===== core logic (shared by the app and by the tests) =====
+// 12 rhythm categories of Desain & Honing (2003), in the order of response proportion (their Table 1)
+const CATS=[
+ {id:1, r:[1,1,1], unit:'q', color:'#D7263D', name:'1:1:1'},
+ {id:2, r:[1,2,1], unit:'q', color:'#F2C500', name:'1:2:1'},
+ {id:3, r:[2,1,1], unit:'q', color:'#2E9BD6', name:'2:1:1'},
+ {id:4, r:[1,1,2], unit:'q', color:'#2E9B3E', name:'1:1:2'},
+ {id:5, r:[2,3,1], unit:'e', color:'#4A5FA5', name:'2:3:1'},
+ {id:6, r:[4,3,1], unit:'e', color:'#B5A100', name:'4:3:1'},
+ {id:7, r:[3,1,2], unit:'e', color:'#1E8C93', name:'3:1:2'},
+ {id:8, r:[4,1,1], unit:'e', color:'#E0679B', name:'4:1:1'},
+ {id:9, r:[1,3,2], unit:'e', color:'#E8960C', name:'1:3:2'},
+ {id:10,r:[3,1,4], unit:'e', color:'#5B9BD5', name:'3:1:4'},
+ {id:11,r:[1,1,4], unit:'e', color:'#8E1A8C', name:'1:1:4'},
+ {id:12,r:[2,1,3], unit:'e', color:'#D9694B', name:'2:1:3'}
+];
+const GRID=19, MINU=3;          // intervals are multiples of 1/19 s, each at least 3/19 s
+function allStimuli(){            // the 66 stimuli
+  const out=[];
+  for(let a=MINU;a<=GRID-2*MINU;a++) for(let b=MINU;b<=GRID-a-MINU;b++){const c=GRID-a-b; if(c>=MINU) out.push([a,b,c]);}
+  return out;
+}
+// a subset of 12 stimuli that spans the space (near the centres of the main categories and in between)
+// ordered by priority: the first n of them give the best coverage when fewer than 12 questions are chosen
+const CORE12=[[6,6,7],[5,9,5],[9,5,5],[5,5,9],[4,7,8],[6,10,3],[12,3,4],[4,9,6],[9,3,7],[3,3,13],[3,10,6],[9,7,3]];
+function buildSet(n,rng){            // n stimuli: the first min(n,12) of CORE12, and random others when n > 12
+  const base=CORE12.slice(0,Math.min(n,12)); if(n<=12) return base;
+  const keys=new Set(base.map(u=>u.join('-'))); const rest=allStimuli().filter(u=>!keys.has(u.join('-')));
+  return base.concat(shuffle(rest,rng).slice(0,Math.min(n-12,rest.length)));
+}
+function norm(u){const s=u[0]+u[1]+u[2]; return [u[0]/s,u[1]/s,u[2]/s];}
+function dist(p,q){return Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);}
+function nearestCat(units){        // the simple ratio closest to the stimulus (a "rounding" model)
+  const p=norm(units); let best=null,bd=1e9;
+  for(const c of CATS){const d=dist(p,norm(c.r)); if(d<bd){bd=d;best=c;}}
+  return best;
+}
+// triangle geometry: top = interval 1 long, bottom-left = interval 2 long, bottom-right = interval 3 long
+function triPoint(p,T,BL,BR){return [p[0]*T[0]+p[1]*BL[0]+p[2]*BR[0], p[0]*T[1]+p[1]*BL[1]+p[2]*BR[1]];}
+// stimulus onsets (seconds) for one trial: bar markers 0..8, the pattern in bars 2,4,6 (onsets: t, t+a, t+a+b, t+1)
+function schedule(units){
+  const ivs=units.map(u=>u/GRID); const bars=[]; for(let i=0;i<=8;i++) bars.push(i);
+  const pat=[]; for(const t0 of [2,4,6]){pat.push(t0, t0+ivs[0], t0+ivs[0]+ivs[1], t0+1);}
+  return {bars,pat,ivs};
+}
+function shuffle(a,rng){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor((rng||Math.random)()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+// ===== notation icons (single-line staff, noteheads, stems, flags, beams, dots) =====
+// duration in eighth-note units: 1 eighth, 2 quarter, 3 dotted quarter, 4 half
+function toEighths(c){ return c.r.map(x=> c.unit==='q' ? x*2 : x); }
+function noteSVG(c,opts){
+  opts=opts||{}; const W=opts.w||160, H=opts.h||56, y0=H-17, stem=26;
+  const e=toEighths(c); const total=e.reduce((a,b)=>a+b,0); const x0=10, x4=W-16;
+  // spacing: a minimum gap plus a part proportional to the duration; the 4th (grey) note is at the end of the bar
+  const MIN=15, MINLAST=30, k=((x4-x0)-(e.length-1)*MIN-MINLAST)/total; let xc=x0; const xs=e.map((d,j)=>{const x=xc; xc+=(j===e.length-1?MINLAST:MIN)+k*d; return x;});
+  const ink='currentColor'; let g='';
+  g+=`<line x1="4" y1="${y0}" x2="${W-4}" y2="${y0}" stroke="${ink}" stroke-width="1" opacity=".45"/>`;
+  const stemX=xs.map(x=>x+5.2);
+  e.forEach((d,i)=>{
+    const filled = d<4; const x=xs[i];
+    g+=`<ellipse cx="${x}" cy="${y0}" rx="5.8" ry="4.2" transform="rotate(-20 ${x} ${y0})" fill="${filled?ink:'none'}" stroke="${ink}" stroke-width="1.6"/>`;
+    g+=`<line x1="${x+5.2}" y1="${y0-1}" x2="${x+5.2}" y2="${y0-stem}" stroke="${ink}" stroke-width="1.6"/>`;
+    if(d===3) g+=`<circle cx="${x+11.5}" cy="${y0}" r="1.9" fill="${ink}"/>`;
+  });
+  e.forEach((d,i)=>{
+    if(d!==1) return;
+    const nxt=e[i+1]===1, prv=e[i-1]===1;
+    if(nxt){ g+=`<line x1="${stemX[i]}" y1="${y0-stem+1}" x2="${stemX[i+1]}" y2="${y0-stem+1}" stroke="${ink}" stroke-width="3.4"/>`; }
+    else if(!prv){ g+=`<path d="M${stemX[i]} ${y0-stem} q 7 4 4 12" fill="none" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>`; }
+  });
+  // bar line: the end of the bar, just before the 4th note
+  g+=`<line x1="${x4-9.5}" y1="${y0-15}" x2="${x4-9.5}" y2="${y0+15}" stroke="${ink}" stroke-width="1.7"/>`;
+  // the 4th onset: the first note of the next bar, drawn in grey (it is heard, but it is not part of the answer)
+  g+=`<g opacity=".38"><ellipse cx="${x4}" cy="${y0}" rx="5.8" ry="4.2" transform="rotate(-20 ${x4} ${y0})" fill="${ink}" stroke="${ink}" stroke-width="1.6"/><line x1="${x4+5.2}" y1="${y0-1}" x2="${x4+5.2}" y2="${y0-stem}" stroke="${ink}" stroke-width="1.6"/></g>`;
+  return `<svg class="note" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${g}</svg>`;
+}
+
+// ===== the result map (SVG string): same orientation as Figure 11 of Desain & Honing (2003) =====
+function lum(hex){const n=parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return (0.299*r+0.587*g+0.114*b)/255;}
+function buildMapSVG(answers,opts){
+  opts=opts||{}; const W=700,H=610, T=[350,64], BL=[92,508], BR=[608,508];
+  const P=(p)=>triPoint(p,T,BL,BR); const f=x=>x.toFixed(1);
+  let s=`<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="三角形の地図：あなたの回答の位置">`;
+  // 1) tint: the simple ratio that is closest (a rounding model), only inside the region that was sampled
+  const N=48, lo=MINU/GRID, step=1/N, side=BR[0]-BL[0], r=side*step*0.72;
+  for(let i=0;i<=N;i++) for(let j=0;i+j<=N;j++){
+    const p=[i*step,j*step,1-(i+j)*step]; if(p[0]<lo||p[1]<lo||p[2]<lo) continue;
+    const c=nearestCat([p[0]*GRID,p[1]*GRID,p[2]*GRID]); const [x,y]=P(p);
+    s+=`<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${c.color}" opacity=".22"/>`;
+  }
+  // 2) triangle and grid lines (0.2 steps)
+  s+=`<polygon points="${T.join(',')} ${BL.join(',')} ${BR.join(',')}" fill="none" style="stroke:var(--axis)" stroke-width="1.6"/>`;
+  for(const v of [0.2,0.4,0.6,0.8]){
+    const a=P([v,1-v,0]), b=P([v,0,1-v]);       // interval 1 = v (horizontal)
+    const c=P([1-v,v,0]), d=P([0,v,1-v]);       // interval 2 = v
+    const e=P([1-v,0,v]), g=P([0,1-v,v]);       // interval 3 = v
+    s+=`<g style="stroke:var(--grid)" stroke-width="1" fill="none"><line x1="${f(a[0])}" y1="${f(a[1])}" x2="${f(b[0])}" y2="${f(b[1])}"/><line x1="${f(c[0])}" y1="${f(c[1])}" x2="${f(d[0])}" y2="${f(d[1])}"/><line x1="${f(e[0])}" y1="${f(e[1])}" x2="${f(g[0])}" y2="${f(g[1])}"/></g>`;
+    s+=`<text x="${f(a[0]-9)}" y="${f(a[1]+5)}" text-anchor="end" class="tick">${v}</text>`;
+    s+=`<text x="${f(d[0])}" y="${f(d[1]+22)}" text-anchor="middle" class="tick">${v}</text>`;
+    s+=`<text x="${f(e[0]+9)}" y="${f(e[1]+5)}" text-anchor="start" class="tick">${v}</text>`;
+  }
+  // 3) corner labels
+  s+=`<text x="${T[0]}" y="${T[1]-24}" text-anchor="middle" class="corner">間隔1が長い</text>`;
+  s+=`<text x="${BL[0]-14}" y="${BL[1]+54}" text-anchor="start" class="corner">間隔2が長い</text>`;
+  s+=`<text x="${BR[0]+14}" y="${BR[1]+54}" text-anchor="end" class="corner">間隔3が長い</text>`;
+  // 4) optional: the 66 sampled positions
+  if(opts.grid) for(const u of allStimuli()){const [x,y]=P(norm(u)); s+=`<circle cx="${f(x)}" cy="${f(y)}" r="2.2" style="fill:var(--muted)" opacity=".7"/>`;}
+  // 5) x marks: the exact (mechanical) ratios of the four simple rhythms
+  for(const c of CATS.slice(0,4)){const [x,y]=P(norm(c.r)); const k=12;
+    s+=`<g style="stroke:var(--fg)" stroke-width="2.8" stroke-linecap="round" opacity=".9"><line x1="${f(x-k)}" y1="${f(y-k)}" x2="${f(x+k)}" y2="${f(y+k)}"/><line x1="${f(x-k)}" y1="${f(y+k)}" x2="${f(x+k)}" y2="${f(y-k)}"/></g>`;}
+  // 6) the answers
+  answers.forEach((a,i)=>{
+    const [x,y]=P(norm(a.units)); const col=a.cat? CATS[a.cat-1].color : '#8A97A0'; const tc=lum(col)>0.62?'#1B2A33':'#FFFFFF';
+    s+=`<circle cx="${f(x)}" cy="${f(y)}" r="17" fill="${col}" style="stroke:var(--bg)" stroke-width="2.6"/>`;
+    s+=`<text x="${f(x)}" y="${f(y+6.6)}" text-anchor="middle" font-size="19" font-weight="700" fill="${tc}">${i+1}</text>`;
+  });
+  s+='</svg>'; return s;
+}
+
+// ===== app =====
+const $=(s,r)=> (r||document).querySelector(s);
+const COUNTS=[{n:6,t:'約2分'},{n:12,t:'約5分'},{n:24,t:'約10分'},{n:66,t:'約25分（全部）'}];
+let ctx=null, master=null;
+const BONGO_LEVELS=[{k:'ふつう',g:1.0},{k:'大きい',g:1.7},{k:'とても大きい',g:2.6}];
+const state={n:12,bongoLevel:1,order:[],idx:0,answers:[],used:new Set(),sel:null,phase:'idle',plays:0,t0:0,raf:0,showGrid:false,sessionStart:0};
+
+function ensureCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC) return null;
+  if(!ctx){ctx=new AC(); master=ctx.createGain(); master.gain.value=0.85;
+    let out=master; try{const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-5; comp.knee.value=8; comp.ratio.value=4; comp.attack.value=0.002; comp.release.value=0.12; master.connect(comp); out=comp;}catch(e){}
+    out.connect(ctx.destination);}
+  if(ctx.state==='suspended') ctx.resume();
+  return ctx;
+}
+// two percussive sounds (approximations of the high woodblock and the low bongo of Desain & Honing, 2003)
+function wood(t){
+  const g=ctx.createGain(), o1=ctx.createOscillator(), o2=ctx.createOscillator();
+  o1.type='sine'; o1.frequency.value=1650; o2.type='triangle'; o2.frequency.value=2480;
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.75,t+0.002); g.gain.exponentialRampToValueAtTime(0.0008,t+0.08);
+  o1.connect(g); o2.connect(g); g.connect(master); o1.start(t); o2.start(t); o1.stop(t+0.1); o2.stop(t+0.1);
+}
+function bongo(t,duck){
+  const L=BONGO_LEVELS[state.bongoLevel].g*(duck?0.4:1);
+  const g=ctx.createGain(), o=ctx.createOscillator(), o2=ctx.createOscillator(), lp=ctx.createBiquadFilter();
+  o.type='triangle'; o.frequency.setValueAtTime(400,t); o.frequency.exponentialRampToValueAtTime(250,t+0.07);
+  o2.type='sine'; o2.frequency.setValueAtTime(800,t); o2.frequency.exponentialRampToValueAtTime(520,t+0.05);
+  lp.type='lowpass'; lp.frequency.value=2200;
+  g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.32*L,t+0.005); g.gain.exponentialRampToValueAtTime(0.0008,t+0.24);
+  o.connect(lp); o2.connect(lp); lp.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t+0.28); o2.stop(t+0.28);
+  if(!duck) try{ // a short noise click: the attack of a hand drum
+    const n=Math.floor(ctx.sampleRate*0.03), buf=ctx.createBuffer(1,n,ctx.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    const src=ctx.createBufferSource(); src.buffer=buf; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1100; bp.Q.value=0.9;
+    const gn=ctx.createGain(); gn.gain.setValueAtTime(0.18*L,t); gn.gain.exponentialRampToValueAtTime(0.0008,t+0.03);
+    src.connect(bp); bp.connect(gn); gn.connect(master); src.start(t);
+  }catch(e){}
+}
+function playStimulus(units,done,progress){
+  if(!ensureCtx()){alert('このブラウザでは，音を出せません．'); return;}
+  const sc=schedule(units); const t0=ctx.currentTime+0.2; state.t0=t0;
+  const hit=new Set(sc.pat.map(p=>Math.round(p*1000))); // onsets that coincide with a bar marker (the 1st and 4th onset of each repetition)
+  sc.bars.forEach(b=>bongo(t0+b, hit.has(b*1000))); sc.pat.forEach(p=>wood(t0+p));
+  const dur=8.4; cancelAnimationFrame(state.raf);
+  const tick=()=>{const e=(ctx.currentTime-t0)/dur; progress(Math.max(0,Math.min(1,e))); if(e>=1){done();} else state.raf=requestAnimationFrame(tick);};
+  state.raf=requestAnimationFrame(tick);
+}
+function playCheck(btn){
+  if(!ensureCtx()){alert('このブラウザでは，音を出せません．'); return;}
+  const t=ctx.currentTime+0.2;
+  // an example with the same structure as the questions: the 1:2:1 rhythm (4 high sounds in 1 s), with low sounds every second
+  [0,1,2,3].forEach(b=>bongo(t+b,(b===1||b===2)));
+  [1,1.25,1.75,2].forEach(p=>wood(t+p));
+  const o=btn.textContent; btn.textContent='鳴らしています…'; btn.disabled=true; setTimeout(()=>{btn.textContent=o; btn.disabled=false;},3600);
+}
+const pad=n=>String(n);
+function ms(units){return units.map(u=>Math.round(u*1000/GRID));}
+function ratioText(c){return c.r.join('：');}
+function chip(c){return `<span class="chip"><i class="dot" style="background:${c.color}"></i>${ratioText(c)}</span>`;}
+
+function renderLevels(){
+  document.querySelectorAll('[data-lvl]').forEach(box=>{
+    box.innerHTML='<span>低い音の大きさ：</span>'+BONGO_LEVELS.map((l,i)=>`<button type="button" data-i="${i}" aria-pressed="${i===state.bongoLevel}">${l.k}</button>`).join('');
+    box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state.bongoLevel=+b.dataset.i; renderLevels(); if(box.dataset.lvl==='trial'||box.dataset.lvl==='intro'){ensureCtx(); if(ctx){const t=ctx.currentTime+0.1; bongo(t); bongo(t+0.8);}}}));
+  });
+}
+function pickOrder(first){
+  if(first) return shuffle(buildSet(state.n));
+  const rest=allStimuli().filter(u=>!state.used.has(u.join('-')));
+  return shuffle(rest).slice(0,state.n);
+}
+function renderCounts(){
+  document.querySelectorAll('[data-cnt]').forEach(box=>{
+    box.innerHTML='<span>問題数：</span>'+COUNTS.map(c=>`<button type="button" data-n="${c.n}" aria-pressed="${c.n===state.n}">${c.n===66?'全66':c.n}問</button>`).join('');
+    box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state.n=+b.dataset.n; renderCounts();}));
+  });
+  const c=COUNTS.find(x=>x.n===state.n)||COUNTS[1];
+  const t=$('#i-time'); if(t) t.textContent=c.t;
+  const s=$('#i-start'); if(s) s.textContent=`はじめる（${state.n}問）`;
+}
+function startSession(first){
+  state.order=pickOrder(first); state.idx=0; state.sel=null; state.phase='idle'; state.plays=0;
+  if(!state.order.length){showResult(); return;}
+  state.order.forEach(u=>state.used.add(u.join('-')));
+  showTrial();
+}
+function show(id){document.querySelectorAll('.screen').forEach(s=>{s.hidden=(s.id!==id);}); window.scrollTo(0,0);}
+
+function showTrial(){
+  const n=state.idx, N=state.order.length;
+  $('#t-count').textContent=`${n+1} / ${N}`;
+  $('#t-bar').style.width=`${(n/N)*100}%`;
+  $('#t-play').disabled=false; $('#t-play').textContent='▶ 聞く（約8秒）';
+  $('#t-prog').style.width='0%'; $('#t-status').textContent='「聞く」を押すと，音が鳴ります．';
+  $('#t-next').disabled=true;
+  state.sel=null; state.phase='idle'; state.plays=0;
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true; b.setAttribute('aria-pressed','false');});
+  show('s-trial');
+}
+function doPlay(){
+  if(state.phase==='playing') return;
+  state.phase='playing'; state.plays++;
+  $('#t-play').disabled=true; $('#t-status').textContent='聞いています…（高い音の4つが，3回くり返されます）';
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;});
+  playStimulus(state.order[state.idx],()=>{
+    state.phase='done'; $('#t-prog').style.width='100%';
+    $('#t-play').textContent='▶ もう一度聞く'; $('#t-play').disabled=false;
+    $('#t-status').textContent='聞こえたリズムを，1つ選んでください．';
+    document.querySelectorAll('.opt').forEach(b=>{b.disabled=false;});
+  },p=>{$('#t-prog').style.width=`${p*100}%`;});
+}
+function choose(id){
+  state.sel=id;
+  document.querySelectorAll('.opt').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.id===id)));
+  $('#t-next').disabled=false;
+}
+function nextTrial(){
+  if(state.sel===null) return;
+  state.answers.push({units:state.order[state.idx], cat:state.sel, plays:state.plays});
+  state.idx++;
+  if(state.idx>=state.order.length) showResult(); else showTrial();
+}
+function showResult(){
+  const A=state.answers; const total=A.length;
+  const match=A.filter(a=>a.cat && a.cat===nearestCat(a.units).id).length;
+  $('#r-map').innerHTML=buildMapSVG(A,{grid:state.showGrid});
+  $('#r-sum').innerHTML=`${total}問のうち，<b>${match}問</b>が，いちばん近い簡単な比と，同じ回答でした．`;
+  $('#r-legend').innerHTML=CATS.map(chip).join('')+`<span class="chip"><i class="dot" style="background:#8A97A0"></i>わからない</span>`;
+  $('#r-body').innerHTML=A.map((a,i)=>{
+    const m=ms(a.units), n=nearestCat(a.units), ans=a.cat?CATS[a.cat-1]:null;
+    return `<tr><td>${i+1}</td><td>${m.join('・')}</td><td>${ans?chip(ans):'—'}</td><td>${chip(n)}</td><td class="${ans&&ans.id===n.id?'ok':'ng'}">${ans&&ans.id===n.id?'○':'×'}</td></tr>`;}).join('');
+  const rest=allStimuli().filter(u=>!state.used.has(u.join('-'))).length;
+  $('#r-more').hidden = rest===0; $('#r-more').textContent = `さらに${Math.min(state.n,rest)}問（残り${rest}問）`;
+  show('s-result');
+}
+function csv(){
+  const rows=['no,interval1_ms,interval2_ms,interval3_ms,answer,nearest_simple_ratio,plays'];
+  state.answers.forEach((a,i)=>{const m=ms(a.units); rows.push([i+1,m[0],m[1],m[2],a.cat?CATS[a.cat-1].name:'unknown',nearestCat(a.units).name,a.plays].join(','));});
+  return rows.join('\n');
+}
+function copyCSV(btn){
+  const text=csv();
+  const done=()=>{const o=btn.textContent; btn.textContent='コピーしました'; setTimeout(()=>{btn.textContent=o;},1800);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,()=>fallback());} else fallback();
+  function fallback(){const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){} document.body.removeChild(ta);}
+}
+function restart(){
+  state.answers=[]; state.used=new Set(); state.showGrid=false; $('#r-grid').checked=false; startSession(true);
+}
+function build(){
+  renderLevels(); renderCounts();
+  const demo=CATS[1]; $('#ex-opt').innerHTML=`<div class="opt demo">${noteSVG(demo)}<span class="lab"><i class="dot" style="background:${demo.color}"></i>${ratioText(demo)}</span></div>`;
+  const opts=$('#opts');
+  opts.innerHTML=CATS.map(c=>`<button type="button" class="opt" data-id="${c.id}" aria-pressed="false" disabled>${noteSVG(c)}<span class="lab"><i class="dot" style="background:${c.color}"></i>${ratioText(c)}</span></button>`).join('');
+  opts.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>choose(+b.dataset.id)));
+  $('#opt-none').addEventListener('click',()=>choose(0));
+  $('#i-check').addEventListener('click',e=>playCheck(e.currentTarget));
+  $('#i-start').addEventListener('click',()=>{ensureCtx(); restart();});
+  $('#t-play').addEventListener('click',doPlay);
+  $('#t-next').addEventListener('click',nextTrial);
+  $('#r-copy').addEventListener('click',e=>copyCSV(e.currentTarget));
+  $('#r-more').addEventListener('click',()=>startSession(false));
+  $('#r-again').addEventListener('click',restart);
+  $('#r-grid').addEventListener('change',e=>{state.showGrid=e.target.checked; $('#r-map').innerHTML=buildMapSVG(state.answers,{grid:state.showGrid});});
+}
+document.addEventListener('DOMContentLoaded',build);
+
+</script>
+</body>
+</html>
