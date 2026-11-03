@@ -81,8 +81,8 @@ svg text{font-family:inherit}
   <p class="lead">音の列を聞いて，すべての音に合わせて，できるだけ正確に，指で叩きます．4つのリズムを，約25秒ずつ．合計で，3分ほどです．</p>
   <div class="card">
     <ul class="tips">
-      <li>イヤホン（有線）かスピーカーで，音量を上げます．マナーモードは，解除してください．</li>
-      <li>Bluetoothのイヤホンは，音が遅れるので，使わないでください．</li>
+      <li>イヤホン（有線でも，Bluetooth でも）か，スピーカーで，音量を上げます．マナーモードは，解除してください．</li>
+      <li>Bluetooth のイヤホンは，音が遅れますが，遅れは，自動で補正されます（遅れが，とても大きい機種では，うまく測れないことがあります．有線のイヤホンがあれば，有線が，確実です）．</li>
       <li>最初の数秒は，聞くだけです．「叩く」と出たら，丸を叩きます（パソコンでは，スペースキー）．</li>
       <li>叩き方は，どちらの手でも，指1本でも，かまいません．</li>
     </ul>
@@ -294,7 +294,7 @@ async function practice(){
   $("bt-text").textContent=txt;
   const w=$("bt-warn");
   if(!est.ok){ w.textContent="叩きが少なかったようです．もう一度，練習しますか？（「つぎへ」を押すと，本番に進みます．練習をやり直すには，ページを再読み込みしてください）"; w.classList.remove("hidden"); }
-  else if(Math.abs(ms)>150){ w.textContent="音と叩きのずれが，大きいようです（約"+ms+" ms）．Bluetoothのイヤホンを使っていませんか？ このまま進むこともできます．"; w.classList.remove("hidden"); }
+  else if(Math.abs(ms)>150){ w.textContent="音と叩きのずれが，大きいようです（約"+ms+" ms）．Bluetoothのイヤホンの遅れだと思います．遅れは，自動で補正されるので，このまま，進んで大丈夫です．"; w.classList.remove("hidden"); }
   else { w.classList.add("hidden"); }
   state.next=()=>startSet("slow");
   show("s-between");
@@ -312,7 +312,8 @@ async function nextTrial(){
   if(state.idx>=state.order.length){ showResults(name); return; }
   const item=state.order[state.idx];
   const r=await runTrial(cfg,item.S,{title:cfg.name+"テンポ "+(state.idx+1)+" / "+state.order.length});
-  const a=analyze(r.taps,r.t0,cfg.T,item.S,cfg.listen,cfg.listen+cfg.tap,state.delta0,state.latencyOk?0.06:0.15);
+  const win = (item.S===0.5) ? (state.latencyOk?0.06:0.15) : 0.5*cfg.T;   // asymmetric patterns: search the whole cycle (a long delay, e.g. Bluetooth, is then not mistaken for half a cycle)
+  const a=analyze(r.taps,r.t0,cfg.T,item.S,cfg.listen,cfg.listen+cfg.tap,state.delta0,win);
   state.results[name][item.key]={item,a,nTaps:r.taps.length};
   state.idx++;
   if(state.idx>=state.order.length){ showResults(name); return; }
